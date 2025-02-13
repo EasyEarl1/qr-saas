@@ -64,7 +64,7 @@ export default function Home() {
       }
 
       img.src = "data:image/svg+xml;base64," + btoa(svgData)
-    } catch (_error) {
+    } catch {
       setError("Failed to download QR code")
       setIsLoading(false)
     }
