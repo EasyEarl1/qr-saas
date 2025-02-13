@@ -22,14 +22,6 @@ export default function Home() {
   const validateAndSetUrl = useCallback((input: string) => {
     setUrl(input)
     setError(null)
-
-    if (!input) return
-
-    try {
-      new URL(input)
-    } catch {
-      setError("Please enter a valid URL (e.g., https://example.com)")
-    }
   }, [])
 
   const downloadQRCode = useCallback(async () => {
@@ -86,13 +78,13 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 pt-32 pb-16">
-        <div className="max-w-xl mx-auto space-y-10">
-          <div className="text-center space-y-4">
+        <div className="max-w-xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
             <h1 className="text-4xl font-black text-[#1A1A1A] tracking-tight">
               Create Beautiful QR Codes
             </h1>
             <p className="text-lg text-gray-500">
-              Simple. Fast. Stunning.
+              Generate QR codes for any text or link
             </p>
           </div>
 
@@ -101,23 +93,16 @@ export default function Home() {
               <CardTitle className="font-bold text-xl text-[#1A1A1A]">QR Code Generator</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* URL Input */}
               <div className="space-y-2">
-                <Label htmlFor="url" className="text-sm font-medium text-gray-500">URL</Label>
+                <Label htmlFor="url" className="text-sm font-medium text-gray-500">Text or URL</Label>
                 <Input
                   id="url"
-                  type="url"
-                  placeholder="Enter your URL"
+                  type="text"
+                  placeholder="Enter text or URL"
                   value={url}
                   onChange={(e) => validateAndSetUrl(e.target.value)}
-                  className={cn(
-                    "h-12 px-4 bg-white/50 border-black/5 focus:border-[#007BFF] focus:ring-[#007BFF]/20 rounded-xl transition-all duration-200",
-                    error && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                  )}
+                  className="h-12 px-4 bg-white/50 border-black/5 focus:border-[#007BFF] focus:ring-[#007BFF]/20 rounded-xl transition-all duration-200"
                 />
-                {error && (
-                  <p className="text-sm text-red-500 mt-1">{error}</p>
-                )}
               </div>
 
               {/* Size Slider */}
