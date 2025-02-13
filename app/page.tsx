@@ -8,7 +8,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Download } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 export default function Home() {
   const [url, setUrl] = useState("")
