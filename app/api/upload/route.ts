@@ -1,4 +1,4 @@
-import { handleUpload, type HandleUploadBody, type PutBlobResult } from '@vercel/blob/client';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -8,8 +8,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
-      onUploadCompleted: async (uploadData: { blob: PutBlobResult }) => {
-        console.log('Upload completed:', uploadData.blob.url);
+      onUploadCompleted: async (data: { blob: { url: string } }) => {
+        console.log('Upload completed:', data.blob.url);
       }
     });
     
