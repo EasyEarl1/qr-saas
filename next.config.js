@@ -12,12 +12,6 @@ const nextConfig = {
       },
     ],
   },
-  // Add this to allow blob: URLs
-  experimental: {
-    images: {
-      allowFutureImage: true,
-    },
-  },
   async headers() {
     return [
       {

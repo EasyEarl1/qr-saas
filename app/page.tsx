@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,6 @@ import { Slider } from "@/components/ui/slider"
 import { Download } from "lucide-react"
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
-import { Icon } from 'leaflet';
 import Image from 'next/image';
 
 // Add content type enum
@@ -19,7 +18,6 @@ enum QRContentType {
   WIFI = 'wifi',
   VCARD = 'vcard',
   CALENDAR = 'calendar',
-  GEO = 'geo',
   PAYMENT = 'payment',
   SOCIAL = 'social',
   MEDIA = 'media'
@@ -50,12 +48,6 @@ interface CalendarEvent {
   location?: string;
 }
 
-interface GeoLocation {
-  latitude: string;
-  longitude: string;
-  query: string;
-}
-
 interface PaymentInfo {
   paymentType: string;
   address: string;
@@ -76,23 +68,21 @@ interface MediaData {
   url: string;
 }
 
-// Add this after your imports - this is needed because leaflet requires window object
-const MapWithNoSSR = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), {
-  ssr: false
-});
-const MarkerWithNoSSR = dynamic(() => import('react-leaflet').then(mod => mod.Marker), {
-  ssr: false
-});
-const TileLayerWithNoSSR = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), {
-  ssr: false
-});
+// Dynamically import Leaflet components with no SSR
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+)
 
-// Add this after your imports to fix the marker icon issue
-const customIcon = new Icon({
-  iconUrl: '/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
-});
+const Marker = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
+  { ssr: false }
+)
+
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+)
 
 export default function Home() {
   const [url, setUrl] = useState("")
@@ -102,6 +92,7 @@ export default function Home() {
   const [includeMargin, setIncludeMargin] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const [contentType, setContentType] = useState<QRContentType>(QRContentType.TEXT)
   const [wifiData, setWifiData] = useState<WifiCredentials>({
     ssid: '',
@@ -124,11 +115,6 @@ export default function Home() {
     description: '',
     location: ''
   });
-  const [geoData, setGeoData] = useState<GeoLocation>({
-    latitude: '',
-    longitude: '',
-    query: ''
-  });
   const [paymentData, setPaymentData] = useState<PaymentInfo>({
     paymentType: 'PayPal',
     address: '',
@@ -147,16 +133,15 @@ export default function Home() {
   });
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const validateAndSetUrl = useCallback((input: string) => {
-    setUrl(input)
-    setError(null)
-  }, [])
-
   const downloadQRCode = useCallback(async () => {
+    if (!isMounted) return // Early return if not mounted
+    
     if (error || !url) return
     setIsLoading(true)
     
     try {
+      if (typeof window === 'undefined') return // Check for browser environment
+      
       const svg = document.getElementById("qr-code")
       if (!svg) throw new Error("QR code not found")
 
@@ -164,7 +149,6 @@ export default function Home() {
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("Could not get canvas context")
 
-      // Create image element with type safety
       const img = document.createElement('img') as HTMLImageElement
       
       img.onload = () => {
@@ -192,7 +176,17 @@ export default function Home() {
       setError('Failed to download QR code')
       setIsLoading(false)
     }
-  }, [error, url, size])
+  }, [error, url, size, isMounted])
+
+  // Add useEffect for mounting
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const validateAndSetUrl = useCallback((input: string) => {
+    setUrl(input)
+    setError(null)
+  }, [])
 
   // Format functions for each content type
   const formatWifiString = (data: WifiCredentials) => {
@@ -221,10 +215,6 @@ ${data.location ? `LOCATION:${data.location}\n` : ''}
 END:VEVENT`;
   };
 
-  const formatGeoString = (data: GeoLocation) => {
-    return `geo:${data.latitude},${data.longitude}?q=${encodeURIComponent(data.query)}`;
-  };
-
   const formatPaymentString = (data: PaymentInfo) => {
     return `${data.paymentType}:${data.address}?amount=${data.amount}&message=${encodeURIComponent(data.message)}`;
   };
@@ -242,8 +232,6 @@ END:VEVENT`;
         return formatVCardString(vCardData);
       case QRContentType.CALENDAR:
         return formatCalendarString(calendarData);
-      case QRContentType.GEO:
-        return formatGeoString(geoData);
       case QRContentType.PAYMENT:
         return formatPaymentString(paymentData);
       case QRContentType.SOCIAL:
@@ -266,8 +254,6 @@ END:VEVENT`;
         return vCardData.firstName.length > 0 || vCardData.lastName.length > 0;
       case QRContentType.CALENDAR:
         return calendarData.title.length > 0;
-      case QRContentType.GEO:
-        return geoData.latitude.length > 0 && geoData.longitude.length > 0;
       case QRContentType.PAYMENT:
         return paymentData.address.length > 0;
       case QRContentType.SOCIAL:
@@ -326,6 +312,11 @@ END:VEVENT`;
     }
   };
 
+  // Don't render anything until mounted
+  if (!isMounted) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5F5F7] to-white">
       {/* Header with Emoji Logo */}
@@ -364,13 +355,12 @@ END:VEVENT`;
                   id="contentType"
                   value={contentType}
                   onChange={(e) => setContentType(e.target.value as QRContentType)}
-                  className="w-full h-12 px-4 bg-white/50 border-black/5 rounded-xl transition-all duration-200"
+                  className="w-full h-12 px-4 bg-white/50 border-black/5 rounded-xl"
                 >
-                  <option value={QRContentType.TEXT}>Text or URL</option>
-                  <option value={QRContentType.WIFI}>WiFi Network</option>
-                  <option value={QRContentType.VCARD}>Contact Card</option>
+                  <option value={QRContentType.TEXT}>Text</option>
+                  <option value={QRContentType.WIFI}>WiFi</option>
+                  <option value={QRContentType.VCARD}>Contact (vCard)</option>
                   <option value={QRContentType.CALENDAR}>Calendar Event</option>
-                  <option value={QRContentType.GEO}>Location</option>
                   <option value={QRContentType.PAYMENT}>Payment</option>
                   <option value={QRContentType.SOCIAL}>Social Profile</option>
                   <option value={QRContentType.MEDIA}>Media</option>
@@ -541,64 +531,6 @@ END:VEVENT`;
                       value={calendarData.location}
                       onChange={(e) => setCalendarData({...calendarData, location: e.target.value})}
                       placeholder="Enter event location"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {contentType === QRContentType.GEO && (
-                <div className="space-y-4">
-                  <div className="h-[400px] w-full rounded-xl overflow-hidden relative">
-                    <MapWithNoSSR
-                      center={[
-                        geoData.latitude ? parseFloat(geoData.latitude) : 51.505,
-                        geoData.longitude ? parseFloat(geoData.longitude) : -0.09
-                      ]}
-                      zoom={13}
-                      style={{ height: '100%', width: '100%' }}
-                    >
-                      <TileLayerWithNoSSR
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      />
-                      <MarkerWithNoSSR
-                        draggable={true}
-                        icon={customIcon}
-                        position={[
-                          geoData.latitude ? parseFloat(geoData.latitude) : 51.505,
-                          geoData.longitude ? parseFloat(geoData.longitude) : -0.09
-                        ]}
-                        eventHandlers={{
-                          dragend: (e) => {
-                            const marker = e.target;
-                            const position = marker.getLatLng();
-                            setGeoData({
-                              latitude: position.lat.toString(),
-                              longitude: position.lng.toString(),
-                              query: `Location at ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`
-                            });
-                          },
-                        }}
-                      />
-                    </MapWithNoSSR>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Selected Location</Label>
-                    <div className="text-sm text-gray-500">
-                      Latitude: {geoData.latitude}<br />
-                      Longitude: {geoData.longitude}<br />
-                      {geoData.query && <>Description: {geoData.query}</>}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="locationDescription">Location Description (Optional)</Label>
-                    <Input
-                      id="locationDescription"
-                      value={geoData.query}
-                      onChange={(e) => setGeoData({ ...geoData, query: e.target.value })}
-                      placeholder="Enter a description for this location"
                     />
                   </div>
                 </div>
