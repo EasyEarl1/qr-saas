@@ -9,7 +9,8 @@ const uploadCounts = new Map<string, { count: number; timestamp: number }>();
 
 export async function POST(request: Request): Promise<NextResponse> {
   // Get IP address for rate limiting
-  const ip = headers().get('x-forwarded-for') || 'unknown';
+  const headersList = headers();
+  const ip = headersList.get('x-forwarded-for') || 'unknown';
   
   // Check rate limit
   const now = Date.now();
@@ -31,22 +32,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     uploadCounts.set(ip, { count: 1, timestamp: now });
   }
 
-  const body = await request.json() as HandleUploadBody;
-
   try {
-    // Validate file size before upload
-    const contentLength = parseInt(headers().get('content-length') || '0');
-    if (contentLength > 10 * 1024 * 1024) { // 10MB limit
-      return NextResponse.json(
-        { error: 'File too large. Maximum size is 10MB.' },
-        { status: 413 }
-      );
-    }
-
+    const body = await request.json() as HandleUploadBody;
+    
     const jsonResponse = await handleUpload({
       body,
       request,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token: process.env.BLOB_READ_WRITE_TOKEN!,
       onBeforeGenerateToken: async () => ({
         allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif'],
         maximumSizeInBytes: 10 * 1024 * 1024, // 10MB
