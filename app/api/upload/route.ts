@@ -1,4 +1,4 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
+import { handleUpload, type HandleUploadBody, type HandleUploadOptions } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -8,10 +8,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
+      onBeforeGenerateToken: async () => {
+        // Implement any logic needed before generating the token
+        return { token: 'your-token-here' }; // Replace with actual token logic
+      },
       onUploadCompleted: async (data: { blob: { url: string } }) => {
         console.log('Upload completed:', data.blob.url);
       }
-    });
+    } as HandleUploadOptions);
     
     return NextResponse.json(jsonResponse);
   } catch (error) {
