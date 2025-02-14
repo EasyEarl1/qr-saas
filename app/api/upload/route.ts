@@ -8,6 +8,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
+      onBeforeGenerateToken: async () => {
+        // Add any token validation logic here
+        return {
+          allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif'],
+          maximumSizeInBytes: 10 * 1024 * 1024, // 10MB
+        }
+      },
       onUploadCompleted: async (data: { blob: { url: string } }) => {
         console.log('Upload completed:', data.blob.url);
       }
