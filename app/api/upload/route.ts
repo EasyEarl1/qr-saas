@@ -8,11 +8,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
-      token: process.env.BLOB_READ_WRITE_TOKEN!,
-      onBeforeGenerateToken: async () => ({
-        allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif'],
-        maximumSizeInBytes: 10 * 1024 * 1024, // 10MB
-      }),
+      onUploadCompleted: async (callbackBody: { blob: any, url: string }) => {
+        // Required callback
+        return undefined;
+      },
     });
     
     return NextResponse.json(jsonResponse);
