@@ -8,7 +8,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
-      onUploadCompleted: async ({ blob, url }: { blob: { url: string }, url: string }) => {
+      onUploadCompleted: async ({ url }: { url: string }) => {
         // Store the URL in your database here if needed
         console.log('Upload completed:', url);
       },
