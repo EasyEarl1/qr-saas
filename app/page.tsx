@@ -11,7 +11,7 @@ import { Download } from "lucide-react"
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
-import { put } from '@vercel/blob';
+import Image from 'next/image';
 
 // Add content type enum
 enum QRContentType {
@@ -700,10 +700,12 @@ END:VEVENT`;
                     >
                       {mediaData.preview ? (
                         <div className="space-y-4 relative">
-                          <img
+                          <Image
                             src={mediaData.preview}
                             alt="Preview"
-                            className="max-h-48 mx-auto rounded-lg"
+                            width={192}
+                            height={192}
+                            className="max-h-48 mx-auto rounded-lg object-contain"
                           />
                           {mediaData.uploadStatus === 'uploading' && (
                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-lg">

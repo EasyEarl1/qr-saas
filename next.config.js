@@ -3,6 +3,21 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
   },
+  images: {
+    domains: ['vercel-storage.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.vercel-storage.com',
+      },
+    ],
+  },
+  // Add this to allow blob: URLs
+  experimental: {
+    images: {
+      allowFutureImage: true,
+    },
+  },
   async headers() {
     return [
       {
