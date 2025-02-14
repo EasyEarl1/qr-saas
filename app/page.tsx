@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import React, { useState, useCallback } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -160,35 +160,39 @@ export default function Home() {
       const svg = document.getElementById("qr-code")
       if (!svg) throw new Error("QR code not found")
 
-      const svgData = new XMLSerializer().serializeToString(svg)
       const canvas = document.createElement("canvas")
       const ctx = canvas.getContext("2d")
-      const img = new Image()
+      if (!ctx) throw new Error("Could not get canvas context")
 
+      // Create image element with type safety
+      const img = document.createElement('img') as HTMLImageElement
+      
       img.onload = () => {
         canvas.width = size
         canvas.height = size
-        ctx?.drawImage(img, 0, 0)
+        ctx.drawImage(img, 0, 0, size, size)
         
-        const pngFile = canvas.toDataURL("image/png")
-        const downloadLink = document.createElement("a")
-        downloadLink.download = `${url.replace(/[^a-zA-Z0-9]/g, '_')}_qr.png`
-        downloadLink.href = pngFile
-        downloadLink.click()
-        setIsLoading(false)
+        try {
+          const dataUrl = canvas.toDataURL("image/png")
+          const link = document.createElement("a")
+          link.download = "qr-code.png"
+          link.href = dataUrl
+          link.click()
+        } catch (err) {
+          console.error('Download error:', err)
+          setError('Failed to download QR code')
+        } finally {
+          setIsLoading(false)
+        }
       }
 
-      img.onerror = () => {
-        setError("Failed to generate QR code")
-        setIsLoading(false)
-      }
-
-      img.src = "data:image/svg+xml;base64," + btoa(svgData)
-    } catch {
-      setError("Failed to download QR code")
+      img.src = `data:image/svg+xml;base64,${btoa(new XMLSerializer().serializeToString(svg))}`
+    } catch (error) {
+      console.error('Download error:', error)
+      setError('Failed to download QR code')
       setIsLoading(false)
     }
-  }, [url, size, error])
+  }, [error, url, size])
 
   // Format functions for each content type
   const formatWifiString = (data: WifiCredentials) => {
