@@ -8,9 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Download } from "lucide-react"
-import dynamic from 'next/dynamic';
-import 'leaflet/dist/leaflet.css';
-import Image from 'next/image';
+import Image from 'next/image'
 
 // Add content type enum
 enum QRContentType {
@@ -67,22 +65,6 @@ interface MediaData {
   uploadStatus: 'idle' | 'uploading' | 'done' | 'error';
   url: string;
 }
-
-// Dynamically import Leaflet components with no SSR
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-)
-
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-)
-
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-)
 
 export default function Home() {
   const [url, setUrl] = useState("")
