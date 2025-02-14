@@ -260,37 +260,35 @@ END:VEVENT`;
       const previewUrl = URL.createObjectURL(file);
       setMediaData(prev => ({ ...prev, preview: previewUrl }));
 
-      // Create FormData and append file
       const formData = new FormData();
       formData.append('file', file);
 
-      // Upload using our new API route
       const response = await fetch('/api/blob-upload', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
       }
 
       const { url } = await response.json();
 
-      setMediaData({
-        file,
-        preview: previewUrl,
+      setMediaData(prev => ({
+        ...prev,
         uploadStatus: 'done',
-        url: url
-      });
+        url
+      }));
 
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('Upload error:', error);
       setMediaData(prev => ({ 
         ...prev, 
         uploadStatus: 'error',
         preview: '' 
       }));
-      setUploadError(error instanceof Error ? error.message : 'Upload failed. Please try again.');
+      setUploadError(error instanceof Error ? error.message : 'Upload failed');
     }
   };
 
