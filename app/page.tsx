@@ -94,14 +94,6 @@ const customIcon = new Icon({
   iconAnchor: [12, 41]
 });
 
-// Add this type declaration at the top of the file
-declare global {
-  interface Window {
-    Image: {
-      new(): HTMLImageElement;
-    }
-}
-
 export default function Home() {
   const [url, setUrl] = useState("")
   const [size, setSize] = useState(256)
@@ -171,12 +163,12 @@ export default function Home() {
       const svgData = new XMLSerializer().serializeToString(svg)
       const canvas = document.createElement("canvas")
       const ctx = canvas.getContext("2d")
-      const img = document.createElement('img')
+      const img = new Image()
 
       img.onload = () => {
         canvas.width = size
         canvas.height = size
-        ctx?.drawImage(img, 0, 0, size, size)
+        ctx?.drawImage(img, 0, 0)
         
         const pngFile = canvas.toDataURL("image/png")
         const downloadLink = document.createElement("a")
